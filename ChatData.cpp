@@ -67,7 +67,7 @@ QJsonArray QChatData::buildJsonMsg()
     systemMessage["role"] = "system";
     systemMessage["content"] = "You are a helpful assistant.";
     QJsonArray messages;
-    messages.append(systemMessage);
+    //messages.append(systemMessage);
     for (QList<Conversion>::iterator p = m_chatDataList.begin(); p != m_chatDataList.end(); p++)
     {
         if (p->iState > 0)
@@ -80,7 +80,10 @@ QJsonArray QChatData::buildJsonMsg()
         if (p->iState > 1)
         {
             QJsonObject userMessage;
-            userMessage["role"] = "user";
+            if (1/*m_request.url().toString().contains("baidu")*/)
+                userMessage["role"] = "assistant";
+            else
+                userMessage["role"] = "user";
             userMessage["content"] = p->strResponse;
             messages.append(userMessage);
         }

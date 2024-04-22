@@ -170,10 +170,26 @@ void ChatGPTClient::sendRequest()
             strList.append(strInput);
             exe->setArguments(strList);
             exe->start();
-            exe->waitForFinished();
+            exe->waitForFinished(100000);
             strInput = exe->readAllStandardOutput();
+            if (strInput.isEmpty())//备用，收不到时读取备份文件
+            {
+                QFile rFile("./plugins/Out.bak");
+                rFile.open(QIODevice::ReadOnly);
+                strInput = rFile.readAll();
+                rFile.close();
+                rFile.remove();
+            }
             break;
         }
+    }
+    if (strInput.isEmpty())
+    {
+        m_pAddTopicBtn->setEnabled(true);
+        m_pListWidget->setEnabled(true);
+        m_pSendBtn->setEnabled(true);
+        m_pSendBtn->setText(tr("发送"));
+        return;
     }
     if (m_strCurrentTopic.compare("NEW") == 0)
     {

@@ -28,7 +28,7 @@ void QNetworkThread::initJsonMsg(QString strModel)
     systemMessage["content"] = "You are a helpful assistant.";
 
     QJsonArray messages;
-    messages.append(systemMessage);
+    //messages.append(systemMessage);
     m_jsonMsg["model"] = strModel;
     m_jsonMsg["messages"] = messages;
     m_jsonMsg["max_tokens"] = 1000;
@@ -102,7 +102,12 @@ void QNetworkThread::onReadyRead()
             QTool::Log(QString(tr("收到服务器端返回的错误信息为：%1")).arg(errorMsg));
             return;
         }
-        QString responseText = jsonResponse.object()["choices"].toArray()[0].toObject()["delta"].toObject()["content"].toString();
+        QString responseText = "";
+        //百度聊天模型
+        if(m_request.url().toString().contains("baidu"))
+            responseText = jsonResponse.object()["result"].toString();
+        else//默认为openai
+            responseText = jsonResponse.object()["choices"].toArray()[0].toObject()["delta"].toObject()["content"].toString();
         if (responseText.isNull())
             continue;
         g_chatData.addAnswer(responseText);

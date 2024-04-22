@@ -152,11 +152,11 @@ void QChatDatabase::initSettingsTable()
     if (m_db.open())
     {
         m_db.exec(QString("insert into settings (SettingsName,SettingsValue,notes) values('%1','%2','%3')")
-            .arg("Url").arg("http://chat.cicitong.top").arg("OpenAI chat URL"));
+            .arg("Url").arg("https://api.openai.com/v1/chat/completions").arg("OpenAI chat URL"));
         m_db.exec(QString("insert into settings (SettingsName,SettingsValue,notes) values('%1','%2','%3')")
             .arg("model").arg("gpt-3.5-turbo").arg("OpenAI most cost-effective chat model"));
         m_db.exec(QString("insert into settings (SettingsName,SettingsValue,notes) values('%1','%2','%3')")
-            .arg("ApiKey").arg("qchatgpt_developer_test_key").arg("api key"));//测试密钥，请节约使用；a test key, please use it sparingly
+            .arg("ApiKey").arg("test key").arg("api key"));
         QString str = m_db.lastError().text();
         m_db.exec(QString("insert into settings (SettingsName,SettingsValue,notes) values('%1','%2','%3')")
             .arg("temperature").arg("0.5").arg("What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic."));
