@@ -262,6 +262,7 @@ void QChatBrowser::onAnchorClicked(const QUrl& link)
             QStringList strList = p.value();
             strList.append(c.strRequest);
             strList.append(c.strResponse);
+            strList.append(c.strTime);
             exe->setArguments(strList);
             exe->start();
         }
