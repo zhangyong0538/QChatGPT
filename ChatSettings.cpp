@@ -44,7 +44,7 @@ QChatSettings::QChatSettings(QWidget* parent)
 	m_pAddPluginBtn = new QPushButton(tr("添加输出插件"));
 	connect(m_pAddPluginBtn, &QPushButton::clicked, [=]() {
 		QInputDialog inputDlg;
-		inputDlg.setLabelText(tr("填写字符串，形如：插件名;参数1;参数2;参数3..."));
+		inputDlg.setLabelText(tr("填写字符串，其中最后一个参数表示是否自动执行，1-是，0-否，形如：插件名;参数1;参数2;参数3...;1"));
 		int ret = inputDlg.exec();
 		if (ret == QDialog::Accepted)
 		{

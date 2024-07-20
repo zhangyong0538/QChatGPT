@@ -234,6 +234,18 @@ void QChatBrowser::onFinished()
     m_historyChatData.updateLastState(3);
     m_bBuilding = false;
     setContextMenuPolicy(Qt::DefaultContextMenu);
+    //检查输出插件是否自动执行
+    for (QMap<QString, QStringList>::iterator p = m_strPlugins.begin(); p != m_strPlugins.end(); p++)
+    {
+        if (p->last().compare("1") == 0)
+        {
+            QUrl pluginUrl;
+            pluginUrl.setScheme(p.key());
+            pluginUrl.setPath("command");
+            pluginUrl.setQuery(QString("id=%1").arg(m_historyChatData.getLastConversion().iConversionId));
+            onAnchorClicked(pluginUrl);
+        }
+    }
 }
 
 #include <QProcess>

@@ -1,19 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommand>D:\work\QChatGPT\x64\Debug\QChatGPT.exe</LocalDebuggerCommand>
+    <LocalDebuggerCommand>$(ProjectDir)x64\Debug\QChatGPT.exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <QtLastBackgroundBuild>2024-04-25T23:54:37.6017122Z</QtLastBackgroundBuild>
+    <QtTouchProperty>
+    </QtTouchProperty>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="QtSettings">
     <QtLastBackgroundBuild>2024-04-25T23:54:37.8984853Z</QtLastBackgroundBuild>
+    <QtTouchProperty>
+    </QtTouchProperty>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <QtLastBackgroundBuild>2024-04-25T23:54:38.0703018Z</QtLastBackgroundBuild>
+    <QtTouchProperty>
+    </QtTouchProperty>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="QtSettings">
     <QtLastBackgroundBuild>2024-04-25T23:54:38.2733590Z</QtLastBackgroundBuild>
+    <QtTouchProperty>
+    </QtTouchProperty>
   </PropertyGroup>
 </Project>
