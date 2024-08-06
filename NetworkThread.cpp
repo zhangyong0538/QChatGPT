@@ -106,6 +106,8 @@ void QNetworkThread::onReadyRead()
         //百度聊天模型
         if(m_request.url().toString().contains("baidu"))
             responseText = jsonResponse.object()["result"].toString();
+        else if(str.contains("qwen2:0.5b") || str.contains("llama"))//开源模型
+            responseText = jsonResponse.object()["message"].toObject()["content"].toString();
         else//默认为openai
             responseText = jsonResponse.object()["choices"].toArray()[0].toObject()["delta"].toObject()["content"].toString();
         if (responseText.isNull())
