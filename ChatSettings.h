@@ -5,6 +5,7 @@
 #include <QListView>
 #include <QStandardItemModel>
 #include <QPushButton>
+#include <QComboBox>
 class QChatSettings : public QWidget
 {
     Q_OBJECT
@@ -16,11 +17,11 @@ signals:
 
 private:
     QLabel* m_pUrlLabel;
-    QLineEdit* m_pUrlEdit;
+    QComboBox* m_pUrlCombox;
     QLabel* m_pModelLabel;
-    QLineEdit* m_pModelEdit;
+    QComboBox* m_pModelCombox;
     QLabel* m_pApiKeyLabel;
-    QLineEdit* m_pApiKeyEdit;
+    QComboBox* m_pApiKeyCombox;
     QListView* m_pPluginList;
     QStandardItemModel* m_pModel;
     QPushButton* m_pAddPluginBtn;
@@ -28,5 +29,10 @@ private:
     QStandardItemModel* m_pInModel;
     QPushButton* m_pAddInPluginBtn;
     QPushButton* m_pSaveBtn;
+
+    QPushButton* m_pAddUrl;
+    QPushButton* m_pDeleteUrl;
+    QPushButton* m_pAddModel;
+    QPushButton* m_pDeleteModel;
 };
 

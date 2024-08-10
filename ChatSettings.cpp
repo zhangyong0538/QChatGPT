@@ -9,28 +9,93 @@
 
 QChatSettings::QChatSettings(QWidget* parent)
 {
+	m_pAddUrl = new QPushButton("Add");
+	m_pDeleteUrl = new QPushButton("Delete");
+	m_pAddModel = new QPushButton("Add");
+	m_pDeleteModel = new QPushButton("Delete");
+
 	m_pUrlLabel = new QLabel("Url：");
-	m_pUrlEdit = new QLineEdit();
+	m_pUrlCombox = new QComboBox();
+	m_pUrlCombox->setFixedWidth(200);
 	QString strUrl = g_ChatDB.getSingleValue("Url")[0];
-	m_pUrlEdit->setText(strUrl);
+	QStringList strUrlList = strUrl.split(';');
+	m_pUrlCombox->addItems(strUrlList);
 	QHBoxLayout* pUrlLayout = new QHBoxLayout();
 	pUrlLayout->addWidget(m_pUrlLabel);
-	pUrlLayout->addWidget(m_pUrlEdit);
+	pUrlLayout->addWidget(m_pUrlCombox);
+	pUrlLayout->addWidget(m_pAddUrl);
+	pUrlLayout->addWidget(m_pDeleteUrl);
 	m_pModelLabel = new QLabel("Model：");
-	m_pModelEdit = new QLineEdit();
+	m_pModelCombox = new QComboBox();
+	m_pModelCombox->setFixedWidth(200);
 	QString strModel = g_ChatDB.getSingleValue("model")[0];
-	m_pModelEdit->setText(strModel);
+	m_pModelCombox->addItems(strModel.split(';'));
 	QHBoxLayout* pModelLayout = new QHBoxLayout();
 	pModelLayout->addWidget(m_pModelLabel);
-	pModelLayout->addWidget(m_pModelEdit);
+	pModelLayout->addWidget(m_pModelCombox);
+	pModelLayout->addWidget(m_pAddModel);
+	pModelLayout->addWidget(m_pDeleteModel);
 	m_pApiKeyLabel = new QLabel("ApiKey：");
-	m_pApiKeyEdit = new QLineEdit();
+	m_pApiKeyCombox = new QComboBox();
+	m_pApiKeyCombox->setFixedWidth(385);
 	QString strKey = g_ChatDB.getSingleValue("ApiKey")[0];
-	m_pApiKeyEdit->setText(strKey);
+	m_pApiKeyCombox->addItems(strKey.split(';'));
 	QHBoxLayout* pKeyLayout = new QHBoxLayout();
 	pKeyLayout->addWidget(m_pApiKeyLabel);
-	pKeyLayout->addWidget(m_pApiKeyEdit);
+	pKeyLayout->addWidget(m_pApiKeyCombox);
 	setFixedWidth(500);
+
+	//添加/删除Url
+	connect(m_pAddUrl, &QPushButton::clicked, [=]() {
+		QInputDialog inputDlg;
+		inputDlg.setLabelText(tr("填写URL，形如:http://127.0.0.1:8080"));
+		int ret = inputDlg.exec();
+		if (ret == QDialog::Accepted)
+		{
+			QString strValue = inputDlg.textValue();
+			m_pUrlCombox->insertItem(0, strValue);
+			m_pUrlCombox->setCurrentIndex(0);
+		}
+		});
+	connect(m_pDeleteUrl, &QPushButton::clicked, [=]() {
+			m_pUrlCombox->removeItem(m_pUrlCombox->currentIndex());
+			m_pUrlCombox->setCurrentIndex(0);
+		});
+	//添加/删除模型和密钥
+	connect(m_pAddModel, &QPushButton::clicked, [=]() {
+		QInputDialog inputDlg;
+		inputDlg.setLabelText(tr("填写字符串，模型和密钥用分号分开，形如：模型名;密钥"));
+		int ret = inputDlg.exec();
+		if (ret == QDialog::Accepted)
+		{
+			QString strValue = inputDlg.textValue();
+			QString strModelName = strValue.mid(0, strValue.indexOf(";"));
+			QString strKeyValue = strValue.mid(strValue.indexOf(";") + 1, -1);
+			if (strModelName.isEmpty() || strKeyValue.isEmpty())
+			{
+				QMessageBox::warning(nullptr,"警告","模型或密钥不能为空");
+				return;
+			}
+			m_pModelCombox->insertItem(0, strModelName);
+			m_pModelCombox->setCurrentIndex(0);
+			m_pApiKeyCombox->insertItem(0, strKeyValue);
+			m_pApiKeyCombox->setCurrentIndex(0);
+		}
+		});
+	connect(m_pDeleteModel, &QPushButton::clicked, [=]() {
+		int iCurrentIndex = m_pModelCombox->currentIndex();
+		m_pModelCombox->removeItem(iCurrentIndex);
+		m_pModelCombox->setCurrentIndex(0);
+		m_pApiKeyCombox->removeItem(iCurrentIndex);
+		m_pApiKeyCombox->setCurrentIndex(0);
+		});
+	//模型密钥联动
+	connect(m_pModelCombox, &QComboBox::currentIndexChanged, [=](int index) {
+		m_pApiKeyCombox->setCurrentIndex(index);
+		});
+	connect(m_pApiKeyCombox, &QComboBox::currentIndexChanged, [=](int index) {
+		m_pModelCombox->setCurrentIndex(index);
+		});
 	
 	m_pPluginList = new QListView();
 	//QHeaderView* header = new QHeaderView(Qt::Horizontal, m_pPluginList);
@@ -109,10 +174,39 @@ QChatSettings::QChatSettings(QWidget* parent)
 
 	m_pSaveBtn = new QPushButton(tr("保存"));
 	connect(m_pSaveBtn, &QPushButton::clicked, [=]() {
-		g_ChatDB.setSingleValue("Url", m_pUrlEdit->text(), "");
-		g_ChatDB.setSingleValue("model", m_pModelEdit->text(), "");
-		g_ChatDB.setSingleValue("ApiKey", m_pApiKeyEdit->text(), "");
-		emit settingsChangedSignal(m_pUrlEdit->text(), m_pModelEdit->text(), m_pApiKeyEdit->text());
+		QString strAllUrl = m_pUrlCombox->currentText();
+		int iUrlCount = m_pUrlCombox->count();
+		for (int i = 0; i < iUrlCount; i++)
+		{
+			if (i == m_pUrlCombox->currentIndex())
+				continue;
+			strAllUrl.append(';');
+			strAllUrl.append(m_pUrlCombox->itemText(i));
+		}
+		g_ChatDB.setSingleValue("Url", strAllUrl, "");
+
+		QString strAllModel = m_pModelCombox->currentText();
+		int iModelCount = m_pModelCombox->count();
+		for (int i = 0; i < iModelCount; i++)
+		{
+			if (i == m_pModelCombox->currentIndex())
+				continue;
+			strAllModel.append(';');
+			strAllModel.append(m_pModelCombox->itemText(i));
+		}
+		g_ChatDB.setSingleValue("model", strAllModel, "");
+
+		QString strAllKey = m_pApiKeyCombox->currentText();
+		for (int i = 0; i < iModelCount; i++)
+		{
+			if (i == m_pApiKeyCombox->currentIndex())
+				continue;
+			strAllKey.append(';');
+			strAllKey.append(m_pApiKeyCombox->itemText(i));
+		}
+
+		g_ChatDB.setSingleValue("ApiKey", strAllKey, "");
+		emit settingsChangedSignal(m_pUrlCombox->currentText(), m_pModelCombox->currentText(), m_pApiKeyCombox->currentText());
 		QMessageBox::about(this,tr("保存"),tr("保存成功"));
 		this->hide();
 		});

@@ -86,7 +86,7 @@ ChatGPTClient::ChatGPTClient(QWidget* parent) : QWidget(parent)
     QStringList url = g_ChatDB.getSingleValue("Url");
     QStringList model = g_ChatDB.getSingleValue("model");
     QStringList key = g_ChatDB.getSingleValue("ApiKey");
-    m_networkThread.setAppKey(key[0], url[0], model[0]);
+    m_networkThread.setAppKey(key[0].split(';')[0], url[0].split(';')[0], model[0].split(';')[0]);
     m_networkThread.start();
 
     QStringList topics = g_ChatDB.getAllTopics();

@@ -110,7 +110,7 @@ void QNetworkThread::onReadyRead()
         //百度聊天模型
         if (m_request.url().toString().contains("baidu"))
             responseText = jsonResponse.object()["result"].toString();
-        else if (m_request.url().toString().contains("anthropic") || m_jsonMsg["model"].toString().contains("claude"))//anthropic的模型
+        else if (m_request.url().toString().contains("anthropic") || (m_jsonMsg["model"].toString().contains("claude") && !m_request.url().toString().contains("gaochao.cn")))//anthropic的模型，排除特例
             responseText = jsonResponse.object()["delta"].toObject()["text"].toString();
         else if(m_jsonMsg["model"].toString().contains("qwen2:0.5b") || m_jsonMsg["model"].toString().contains("llama"))//开源模型
             responseText = jsonResponse.object()["message"].toObject()["content"].toString();
