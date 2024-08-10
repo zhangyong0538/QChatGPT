@@ -18,6 +18,8 @@ void QNetworkThread::initRequest(QString strUrl)
     m_request.setRawHeader("Content-Type", "application/json");
     QByteArray bArray = QString("Bearer %1").arg(m_strAppKey).toLocal8Bit();
     m_request.setRawHeader("Authorization", bArray);
+    m_request.setRawHeader("x-api-key", m_strAppKey.toUtf8());
+    m_request.setRawHeader("anthropic-version", "2023-06-01");
 
 }
 
@@ -32,8 +34,8 @@ void QNetworkThread::initJsonMsg(QString strModel)
     m_jsonMsg["model"] = strModel;
     m_jsonMsg["messages"] = messages;
     m_jsonMsg["max_tokens"] = 1000;
-    m_jsonMsg["n"] = 1;
-    m_jsonMsg["stop"] = QJsonValue();  // Represents 'null' in JSON
+    //m_jsonMsg["n"] = 1;
+    //m_jsonMsg["stop"] = QJsonValue();  // Represents 'null' in JSON
     m_jsonMsg["temperature"] = 0.1;
     m_jsonMsg["stream"] = true;
 }
@@ -58,6 +60,7 @@ void QNetworkThread::onSendRequest()
     QJsonDocument jsonDoc(m_jsonMsg);
     QByteArray postData = jsonDoc.toJson();
     m_pReply = m_networkManager.post(m_request, postData);
+    m_pReply->ignoreSslErrors();//保证与无权威CA的https服务器通信成功
 
     connect(m_pReply, &QNetworkReply::readyRead, this, &QNetworkThread::onReadyRead);
     //updateTextBrowser();
@@ -75,12 +78,13 @@ void QNetworkThread::onReadyRead()
     QTextCodec* codec = QTextCodec::codecForName("UTF-8");
     QString response_string = codec->toUnicode(response_data);
     QStringList resList = response_string.split("data: ", Qt::SkipEmptyParts);
-    for (const QString& str : resList)
+    for (QString& str : resList)
     {
         if (str.contains("[DONE]"))
         {
             return;
         }
+        str = str.mid(str.indexOf('{'), str.lastIndexOf('}') - str.indexOf('{') + 1);
         QJsonParseError perror;
         QJsonDocument jsonResponse = QJsonDocument::fromJson(str.toUtf8(),&perror);
         
@@ -104,9 +108,11 @@ void QNetworkThread::onReadyRead()
         }
         QString responseText = "";
         //百度聊天模型
-        if(m_request.url().toString().contains("baidu"))
+        if (m_request.url().toString().contains("baidu"))
             responseText = jsonResponse.object()["result"].toString();
-        else if(str.contains("qwen2:0.5b") || str.contains("llama"))//开源模型
+        else if (m_request.url().toString().contains("anthropic") || m_jsonMsg["model"].toString().contains("claude"))//anthropic的模型
+            responseText = jsonResponse.object()["delta"].toObject()["text"].toString();
+        else if(m_jsonMsg["model"].toString().contains("qwen2:0.5b") || m_jsonMsg["model"].toString().contains("llama"))//开源模型
             responseText = jsonResponse.object()["message"].toObject()["content"].toString();
         else//默认为openai
             responseText = jsonResponse.object()["choices"].toArray()[0].toObject()["delta"].toObject()["content"].toString();
