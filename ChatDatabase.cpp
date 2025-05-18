@@ -270,6 +270,24 @@ QString QChatDatabase::getPluginParam(QString strPluginName)
     return strParam;
 }
 
+QString QChatDatabase::getPluginNotes(QString strPluginName)
+{
+    QString strNotes;
+    if (m_db.open())
+    {
+        QString str = "select * from plugin where pluginName = '%1'";
+        str = str.arg(strPluginName);
+        QSqlQuery q = m_db.exec(str);
+        while (q.next())
+        {
+            strNotes = q.value("notes").toString();
+            break;
+        }
+        m_db.close();
+    }
+    return strNotes;
+}
+
 void QChatDatabase::addPlugin(QString strPluginName, QString strParam, bool bInOrOutput)
 {
     if (m_db.open())
@@ -279,6 +297,20 @@ void QChatDatabase::addPlugin(QString strPluginName, QString strParam, bool bInO
             .arg(strPluginName).arg(strParam).arg("in"));
         else
             m_db.exec(QString("insert into plugin (pluginName,parmValue,notes) values('%1','%2','%3')")
+                .arg(strPluginName).arg(strParam).arg("out"));
+        m_db.close();
+    }
+}
+
+void QChatDatabase::updatePlugin(QString strPluginName, QString strParam, bool bInOrOutput)
+{
+    if (m_db.open())
+    {
+        if (bInOrOutput)
+            m_db.exec(QString("update plugin set parmValue='%2',notes='%3' where pluginName='%1'")
+                .arg(strPluginName).arg(strParam).arg("in"));
+        else
+            m_db.exec(QString("update plugin set parmValue='%2',notes='%3' where pluginName='%1'")
                 .arg(strPluginName).arg(strParam).arg("out"));
         m_db.close();
     }

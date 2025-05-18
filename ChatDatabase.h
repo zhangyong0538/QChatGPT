@@ -32,7 +32,9 @@ public:
 	QStringList getAllInPlugins();
 	QStringList getAllOutPlugins();
 	QString getPluginParam(QString strPluginName);
+	QString getPluginNotes(QString strPluginName);
 	void addPlugin(QString strPluginName,QString strParam,bool bInOrOutput);
+	void updatePlugin(QString strPluginName, QString strParam, bool bInOrOutput);
 	void deletePlugin(QString strPluginName);
 
 private:

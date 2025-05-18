@@ -98,8 +98,27 @@ QChatSettings::QChatSettings(QWidget* parent)
 		});
 	
 	m_pPluginList = new QListView();
-	//QHeaderView* header = new QHeaderView(Qt::Horizontal, m_pPluginList);
-	//m_pPluginList-
+	connect(m_pPluginList, &QListView::doubleClicked, [](const QModelIndex& index) {
+		QString strPluginName = index.data().toString();
+		QInputDialog inputDlg;
+		QString strParamValue = g_ChatDB.getPluginParam(strPluginName);
+		QString strNotes = g_ChatDB.getPluginNotes(strPluginName);
+		inputDlg.setLabelText(tr("请按格式修改字符串，最后一个参数只能是out"));
+		inputDlg.setTextValue(strParamValue + ";" + strNotes);
+		int ret = inputDlg.exec();
+		if (ret == QDialog::Accepted)
+		{
+			QString strValue = inputDlg.textValue();
+			QString strParmValue = strValue.mid(0, strValue.lastIndexOf(";"));
+			QString strNotes = strValue.mid(strValue.lastIndexOf(";") + 1, -1);
+			if(strNotes.compare("in") == 0)
+				g_ChatDB.updatePlugin(strPluginName, strParmValue, true);
+			else if (strNotes.compare("out") == 0)
+				g_ChatDB.updatePlugin(strPluginName, strParmValue, false);
+		}
+
+		});
+	
 	m_pModel = new QStandardItemModel();
 	m_pPluginList->setModel(m_pModel);
 	QStringList strList = g_ChatDB.getAllOutPlugins();
@@ -137,6 +156,26 @@ QChatSettings::QChatSettings(QWidget* parent)
 
 	//输入插件操作
 	m_pInPluginList = new QListView();
+	connect(m_pInPluginList, &QListView::doubleClicked, [](const QModelIndex& index) {
+		QString strPluginName = index.data().toString();
+		QInputDialog inputDlg;
+		QString strParamValue = g_ChatDB.getPluginParam(strPluginName);
+		QString strNotes = g_ChatDB.getPluginNotes(strPluginName);
+		inputDlg.setLabelText(tr("请按格式修改字符串，最后一个参数只能是in"));
+		inputDlg.setTextValue(strParamValue + ";" + strNotes);
+		int ret = inputDlg.exec();
+		if (ret == QDialog::Accepted)
+		{
+			QString strValue = inputDlg.textValue();
+			QString strParmValue = strValue.mid(0, strValue.lastIndexOf(";"));
+			QString strNotes = strValue.mid(strValue.lastIndexOf(";") + 1, -1);
+			if (strNotes.compare("in") == 0)
+				g_ChatDB.updatePlugin(strPluginName, strParmValue, true);
+			else if (strNotes.compare("out") == 0)
+				g_ChatDB.updatePlugin(strPluginName, strParmValue, false);
+		}
+
+		});
 	m_pInModel = new QStandardItemModel();
 	m_pInPluginList->setModel(m_pInModel);
 	QStringList strInList = g_ChatDB.getAllInPlugins();
