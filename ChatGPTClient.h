@@ -16,6 +16,7 @@
 #include <QPoint>
 #include <QMap>
 #include <QCheckBox>
+#include <QScrollArea>
 #include "ChatBrowser.h"
 #include "NetworkThread.h"
 #include "ChatSettings.h"
@@ -31,6 +32,7 @@ signals:
     void sendRequestSignal();
 
 private slots:
+    void onInputPreProcess();
     void sendRequest();
     void onAnswer(QString strAnswer);
     void onAnswerFinished();
@@ -54,6 +56,9 @@ private:
     QChatSettings* m_pSettings;
     QPushButton* m_pSettingsBtn;
     QList<QCheckBox*> m_InputPluginList;
+    QList<QPushButton*> m_InputPluginListBtn;
     QMap<QString, QStringList> m_strPlugins;
+
+    QScrollArea* m_pInputPluginScrollArea;
 };
 

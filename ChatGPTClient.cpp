@@ -30,12 +30,15 @@ ChatGPTClient::ChatGPTClient(QWidget* parent) : QWidget(parent)
     m_pSettingsBtn = new QPushButton(tr("设置"));
     //输入插件
     QWidget* pluginWidget = new QWidget();
-    pluginWidget->setFixedHeight(100);
+    m_pInputPluginScrollArea = new QScrollArea;
+    m_pInputPluginScrollArea->setWidget(pluginWidget);
+    m_pInputPluginScrollArea->setWidgetResizable(true);
+    m_pInputPluginScrollArea->setFixedHeight(150);
 
     QVBoxLayout* pLeftLayout = new QVBoxLayout();
     pLeftLayout->addWidget(m_pAddTopicBtn);
     pLeftLayout->addWidget(m_pListWidget);
-    pLeftLayout->addWidget(pluginWidget);
+    pLeftLayout->addWidget(m_pInputPluginScrollArea);
     pLeftLayout->addWidget(m_pSettingsBtn);
     
     layout->addWidget(m_pChatBrowser); 
@@ -109,25 +112,32 @@ ChatGPTClient::ChatGPTClient(QWidget* parent) : QWidget(parent)
     m_pSettings = new QChatSettings();
     connect(m_pSettings, &QChatSettings::settingsChangedSignal, &m_networkThread, &QNetworkThread::onSettingsChangedSignal);
 
-    QVBoxLayout* ppluginWidgetLayout = new QVBoxLayout();
-    QLabel* pPluginLabel = new QLabel(tr("输入插件"));
-    ppluginWidgetLayout->addWidget(pPluginLabel);
-    //QScrollBar* pPluginScrollBar = new QScrollBar(Qt::Orientation::Vertical, pluginWidget);
-    //QVBoxLayout* pScrollBarLayout = new QVBoxLayout();
+    QGridLayout* ppluginWidgetLayout = new QGridLayout();
+    QLabel* pPluginLabel = new QLabel(tr("输入插件："));
+    ppluginWidgetLayout->addWidget(pPluginLabel, 0, 0);
     QStringList plugList = g_ChatDB.getAllInPlugins();
+    int iRow1 = 1,iRow2 = 1;
     foreach(auto strName, plugList)
     {
         QString param = g_ChatDB.getPluginParam(strName);
         QStringList tList = param.split(';');
         m_strPlugins.insert(strName, tList);
-        //创建QCheckBox
-        QCheckBox* pCheckBox = new QCheckBox(strName);
-        pCheckBox->setFixedHeight(50);
-        m_InputPluginList.push_back(pCheckBox);
-        ppluginWidgetLayout->addWidget(pCheckBox);
+        //输入插件类型一创建QPushButton
+        if (tList.last().compare("1") == 0)
+        {
+            QPushButton* pBtn = new QPushButton(strName);
+            QObject::connect(pBtn, &QPushButton::clicked, this, &ChatGPTClient::onInputPreProcess);
+            m_InputPluginListBtn.push_back(pBtn);
+            ppluginWidgetLayout->addWidget(pBtn, iRow1++, 1);
+        }
+        else//输入插件类型二创建QCheckBox
+        {
+            QCheckBox* pCheckBox = new QCheckBox(strName);
+            m_InputPluginList.push_back(pCheckBox);
+            ppluginWidgetLayout->addWidget(pCheckBox, iRow2++, 0);
+        }
     }
-    //pPluginScrollBar->setLayout(pScrollBarLayout);
-    //ppluginWidgetLayout->addWidget(pPluginScrollBar);
+
     pluginWidget->setLayout(ppluginWidgetLayout);
 }
 
@@ -145,6 +155,60 @@ void ChatGPTClient::mouseDoubleClickEvent(QMouseEvent* e)
     int b = a;
 }
 
+void ChatGPTClient::onInputPreProcess()
+{
+    QPushButton* button = qobject_cast<QPushButton*>(sender());
+    QString strName = button->text();
+    QProcess* exe = new QProcess();
+    QString setExeName = QString("./plugins/%1").arg(strName);
+    exe->setWorkingDirectory("./plugins/");
+    exe->setProgram(setExeName);
+    QString str0 = g_ChatDB.getPluginParam(strName);
+    QStringList strList = str0.split(';');
+    exe->setArguments(strList);
+    if(strList[strList.size() - 2].compare("1") == 0)
+        this->showMinimized();
+    m_pSendBtn->setEnabled(false);
+    m_inputLineEdit->setText(tr("正在预处理，请稍后..."));
+    m_inputLineEdit->setEnabled(false);
+    button->setEnabled(false);
+    exe->start();
+    if (exe->error() != exe->UnknownError)
+    {
+        m_pSendBtn->setEnabled(true);
+        m_inputLineEdit->setText(tr(""));
+        m_inputLineEdit->setEnabled(true);
+        button->setEnabled(true);
+        QMessageBox::information(this,"error", exe->errorString());
+        return;
+    }
+    /*exe->waitForFinished(1000000);
+    QString strOutPut = exe->readAllStandardOutput();*/
+    QString strOutPut;
+    int iMaxNums = 0;
+    while (exe->state() == QProcess::Running && iMaxNums < 1000)
+    {
+        if (exe->waitForReadyRead(100))
+            strOutPut = exe->readAllStandardOutput();
+        QCoreApplication::processEvents();
+        iMaxNums++;
+    }
+    if (strOutPut.isEmpty())//备用，收不到时读取备份文件
+    {
+        QFile rFile("./plugins/Out.bak");
+        rFile.open(QIODevice::ReadOnly);
+        strOutPut = rFile.readAll();
+        rFile.close();
+        rFile.remove();
+    }
+    m_inputLineEdit->clear();
+    m_inputLineEdit->setText(strOutPut);
+    if (strList[strList.size() - 2].compare("1") == 0)
+        this->showMaximized();
+    m_pSendBtn->setEnabled(true);
+    m_inputLineEdit->setEnabled(true);
+    button->setEnabled(true);
+}
 
 void ChatGPTClient::sendRequest() 
 {
